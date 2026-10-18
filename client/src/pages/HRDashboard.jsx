@@ -8,6 +8,7 @@ import StatCard from '../components/StatCard';
 import LeaveQueue from '../components/LeaveQueue';
 import EmployeeFormModal from '../components/EmployeeFormModal';
 import AnnouncementModal from '../components/AnnouncementModal';
+import MyDayCard from '../components/MyDayCard';
 
 export default function HRDashboard() {
   const { user } = useAuth();
@@ -19,6 +20,7 @@ export default function HRDashboard() {
   const [pendingTotal, setPendingTotal] = useState(0);
   const [trainings, setTrainings] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
+  const [onLeave, setOnLeave] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [notice, setNotice] = useState('');
@@ -35,8 +37,9 @@ export default function HRDashboard() {
       api.get('/leaves/pending', { params: { limit: 50 } }),
       api.get('/training', { params: { limit: 100 } }),
       api.get('/announcements', { params: { limit: 5 } }),
+      api.get('/leaves/today'),
     ]);
-    const [staffRes, mgrRes, attRes, leaveRes, trainRes, annRes] = results;
+    const [staffRes, mgrRes, attRes, leaveRes, trainRes, annRes, awayRes] = results;
 
     if (staffRes.status === 'fulfilled') setStaffTotal(staffRes.value.data.total);
     if (mgrRes.status === 'fulfilled') setManagers(mgrRes.value.data.users);
@@ -47,6 +50,7 @@ export default function HRDashboard() {
     }
     if (trainRes.status === 'fulfilled') setTrainings(trainRes.value.data.trainings);
     if (annRes.status === 'fulfilled') setAnnouncements(annRes.value.data.announcements);
+    if (awayRes.status === 'fulfilled') setOnLeave(awayRes.value.data.leaves);
 
     const failed = results.find((r) => r.status === 'rejected');
     setLoadError(failed ? getErrorMessage(failed.reason, 'Some information could not be loaded.') : '');
@@ -108,10 +112,12 @@ export default function HRDashboard() {
         </div>
       )}
 
+      <MyDayCard />
+
       <section className="grid-stats grid-stats--4" aria-label="Summary">
         <StatCard icon={Users} label="Total staff" value={loading ? '–' : staffTotal} hint="Active accounts" />
         <StatCard icon={Hourglass} label="Pending leaves" value={loading ? '–' : pendingTotal} hint={pendingTotal ? 'Waiting for review' : 'Nothing waiting'} />
-        <StatCard icon={UserCheck} label="Present today" value={loading ? '–' : `${checkedIn.length} of ${staffTotal}`} hint="Checked in so far" />
+        <StatCard icon={UserCheck} label="Present today" value={loading ? '–' : `${checkedIn.length} of ${staffTotal}`} hint={onLeave.length ? `${onLeave.length} on leave today` : 'Checked in so far'} />
         <StatCard icon={GraduationCap} label="Active trainings" value={loading ? '–' : activeTrainings} hint="Planned or ongoing" />
       </section>
 
