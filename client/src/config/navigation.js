@@ -42,5 +42,7 @@ export const NAV_BY_ROLE = {
 export const getNavItems = (role) => NAV_BY_ROLE[role] ?? [];
 
 /** Page title shown in the top bar. */
+const EXTRA_TITLES = { '/profile': 'My profile' };
+
 export const getPageTitle = (pathname, role) =>
-  getNavItems(role).find((item) => item.to === pathname)?.label ?? 'StaffSync';
+  getNavItems(role).find((item) => item.to === pathname)?.label ?? EXTRA_TITLES[pathname] ?? 'StaffSync';
