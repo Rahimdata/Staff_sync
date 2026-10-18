@@ -235,7 +235,8 @@
   display: -webkit-box;
   overflow: hidden;
   color: var(--text-muted);
-  -webkit-line-clamp: 3;
+    -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
 }
 
