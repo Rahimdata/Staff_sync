@@ -5,6 +5,7 @@ const {
   getUserById,
   updateUser,
   deactivateUser,
+  resetPassword,
 } = require('../controllers/userController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -15,6 +16,7 @@ router.use(protect);
 router.get('/team', authorize('MANAGER'), getTeam); // must stay above '/:id'
 router.get('/', authorize('HR'), getUsers);
 router.get('/:id', getUserById); // access rules enforced in the controller
+router.put('/:id/password', authorize('HR'), resetPassword);
 router.put('/:id', authorize('HR'), updateUser);
 router.delete('/:id', authorize('HR'), deactivateUser);
 
