@@ -84,7 +84,42 @@ const login = asyncHandler(async (req, res) => {
 // @route   GET /api/auth/me
 // @access  Private
 const getMe = asyncHandler(async (req, res) => {
+  await req.user.populate('managerId', 'name email');
   res.json({ success: true, user: req.user });
 });
 
-module.exports = { register, login, getMe };
+// @route   PUT /api/auth/change-password
+// @access  Private
+const changePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  if (typeof currentPassword !== 'string' || typeof newPassword !== 'string' || !currentPassword || !newPassword) {
+    res.status(400);
+    throw new Error('Current password and new password are required');
+  }
+  // bcrypt only uses the first 72 bytes, so longer passwords would be silently truncated
+  if (newPassword.length < 8 || newPassword.length > 72) {
+    res.status(400);
+    throw new Error('The new password must be between 8 and 72 characters');
+  }
+  if (newPassword === currentPassword) {
+    res.status(400);
+    throw new Error('The new password must be different from the current one');
+  }
+
+  const user = await User.findById(req.user._id).select('+password');
+
+  // 400, not 401: the frontend treats any 401 as "session expired" and signs the person out.
+  if (!(await user.matchPassword(currentPassword))) {
+    res.status(400);
+    throw new Error('Your current password is incorrect');
+  }
+
+  user.password = newPassword;
+  await user.save(); // hashes it and invalidates every older token
+
+  // The old token is rejected now too, so return a fresh one for this session.
+  res.json({ success: true, message: 'Password updated', token: generateToken(user._id) });
+});
+
+module.exports = { register, login, getMe, changePassword };
