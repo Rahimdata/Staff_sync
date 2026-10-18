@@ -235,7 +235,7 @@
   display: -webkit-box;
   overflow: hidden;
   color: var(--text-muted);
-    -webkit-line-clamp: 3;
+  -webkit-line-clamp: 3;
   line-clamp: 3;
   -webkit-box-orient: vertical;
 }
@@ -517,4 +517,95 @@
   .grid-stats--4 {
     grid-template-columns: 1fr;
   }
+}
+
+/* ───────── HR additions ───────── */
+.page-head--row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.page-head__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 18px 20px 0;
+}
+
+.search {
+  position: relative;
+  flex: 1 1 240px;
+}
+
+.search svg {
+  position: absolute;
+  top: 50%;
+  left: 13px;
+  color: var(--text-faint);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.search .input {
+  height: 40px;
+  padding-left: 38px;
+}
+
+.input--select {
+  width: auto;
+  min-width: 150px;
+  height: 40px;
+}
+
+.icon-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.row-inactive td:not(:last-child) {
+  opacity: 0.55;
+}
+
+.btn--danger {
+  color: #fff;
+  background: #c0392b;
+}
+
+.btn--danger:hover:not(:disabled) {
+  background: #a5301f;
+}
+
+.confirm__text {
+  margin-bottom: 8px;
+  color: var(--text-muted);
+}
+
+.form-note {
+  margin: -4px 0 6px;
+  font-size: 12.5px;
+}
+
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 16px;
+  color: var(--text-muted);
+}
+
+.pagination__buttons {
+  display: flex;
+  gap: 8px;
 }
