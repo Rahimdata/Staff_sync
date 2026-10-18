@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LogOut, Menu } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getPageTitle } from '../config/navigation';
@@ -6,7 +6,7 @@ import { getInitials } from '../utils/roles';
 import RoleBadge from './RoleBadge';
 
 /**
- * Top bar: page title, profile chip with role badge, quick sign-out.
+ * Top bar: page title, profile chip (links to your profile), quick sign-out.
  * @param {{ onMenuClick: () => void }} props
  */
 export default function Navbar({ onMenuClick }) {
@@ -30,7 +30,7 @@ export default function Navbar({ onMenuClick }) {
 
       <div className="topbar__spacer" />
 
-      <div className="profile-chip">
+      <Link to="/profile" className="profile-chip" title="My profile">
         <span className="avatar" aria-hidden="true">
           {getInitials(user.name)}
         </span>
@@ -38,7 +38,7 @@ export default function Navbar({ onMenuClick }) {
           <span className="profile-chip__name">{user.name}</span>
           <RoleBadge role={user.role} />
         </div>
-      </div>
+      </Link>
 
       <button type="button" className="icon-btn" onClick={handleSignOut} aria-label="Sign out" title="Sign out">
         <LogOut size={18} />
