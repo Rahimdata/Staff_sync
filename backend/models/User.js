@@ -28,6 +28,7 @@ const userSchema = new mongoose.Schema(
     dateOfJoining: { type: Date, default: Date.now },
     managerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     isActive: { type: Boolean, default: true },
+    passwordChangedAt: { type: Date },
   },
   { timestamps: true }
 );
@@ -37,6 +38,8 @@ userSchema.index({ managerId: 1 });
 userSchema.pre('save', async function () {
   if (!this.isModified('password')) return;
   this.password = await bcrypt.hash(this.password, 12);
+  // Any token issued before this moment is rejected by the auth middleware.
+  if (!this.isNew) this.passwordChangedAt = new Date(Date.now() - 1000);
 });
 
 userSchema.methods.matchPassword = function (enteredPassword) {
@@ -46,6 +49,7 @@ userSchema.methods.matchPassword = function (enteredPassword) {
 userSchema.set('toJSON', {
   transform: (doc, ret) => {
     delete ret.password;
+    delete ret.passwordChangedAt;
     delete ret.__v;
     return ret;
   },
