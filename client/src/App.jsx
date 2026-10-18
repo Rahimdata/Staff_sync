@@ -7,6 +7,8 @@ import PagePlaceholder from './components/PagePlaceholder';
 import Login from './pages/Login';
 import EmployeeDashboard from './pages/EmployeeDashboard';
 import ManagerDashboard from './pages/ManagerDashboard';
+import HRDashboard from './pages/HRDashboard';
+import EmployeesPage from './pages/EmployeesPage';
 
 /** "/" sends each person to their own dashboard. */
 function RoleRedirect() {
@@ -38,8 +40,8 @@ export default function App() {
           <Route index element={<RoleRedirect />} />
 
           <Route element={<ProtectedRoute allowedRoles={['HR']} />}>
-            <Route path="hr" element={<PagePlaceholder title="HR dashboard" />} />
-            <Route path="employees" element={<PagePlaceholder title="Employees" />} />
+            <Route path="hr" element={<HRDashboard />} />
+            <Route path="employees" element={<EmployeesPage />} />
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={['MANAGER']} />}>
