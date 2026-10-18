@@ -131,9 +131,9 @@ export default function EmployeeDashboard() {
 
       {/* ───── Stats ───── */}
       <section className="grid-stats" aria-label="Summary">
-        <StatCard icon={UserCheck} label="Today" value={checkedOut ? 'Day complete' : checkedIn ? 'Working' : 'Not checked in'} hint={checkedIn ? `Since ${formatTime(todayRecord.checkInTime)}` : undefined} />
+        <StatCard icon={UserCheck} label="Today" value={checkedOut ? 'Day complete' : checkedIn ? 'Working' : 'Not checked in'} hint={checkedOut ? `Out at ${formatTime(todayRecord.checkOutTime)}` : checkedIn ? `Since ${formatTime(todayRecord.checkInTime)}` : 'Check in to start your day'} />
         <StatCard icon={Hourglass} label="Pending requests" value={pendingCount} hint={pendingCount ? 'Waiting on your manager' : 'Nothing waiting'} />
-        <StatCard icon={CalendarCheck} label="Approved leave days" value={approvedDays} />
+        <StatCard icon={CalendarCheck} label="Approved leave days" value={approvedDays} hint={approvedDays ? 'Across approved requests' : 'None yet'} />
       </section>
 
       <div className="grid-main">
