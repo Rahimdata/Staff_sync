@@ -20,6 +20,11 @@ const protect = asyncHandler(async (req, res, next) => {
     throw new Error('Not authorized, user no longer exists or is deactivated');
   }
 
+  if (user.passwordChangedAt && Math.floor(user.passwordChangedAt.getTime() / 1000) > decoded.iat) {
+    res.status(401);
+    throw new Error('Your password was changed. Please sign in again');
+  }
+
   req.user = user;
   next();
 });
