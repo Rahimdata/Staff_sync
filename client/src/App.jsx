@@ -6,6 +6,7 @@ import Layout from './components/Layout';
 import PagePlaceholder from './components/PagePlaceholder';
 import Login from './pages/Login';
 import EmployeeDashboard from './pages/EmployeeDashboard';
+import ManagerDashboard from './pages/ManagerDashboard';
 
 /** "/" sends each person to their own dashboard. */
 function RoleRedirect() {
@@ -42,7 +43,7 @@ export default function App() {
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={['MANAGER']} />}>
-            <Route path="manager" element={<PagePlaceholder title="Manager dashboard" />} />
+            <Route path="manager" element={<ManagerDashboard />} />
             <Route path="team" element={<PagePlaceholder title="My team" />} />
           </Route>
 
