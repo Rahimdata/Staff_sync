@@ -8,6 +8,9 @@ import Login from './pages/Login';
 import EmployeeDashboard from './pages/EmployeeDashboard';
 import ManagerDashboard from './pages/ManagerDashboard';
 import HRDashboard from './pages/HRDashboard';
+import AttendancePage from './pages/AttendancePage';
+import LeavePage from './pages/LeavePage';
+import ProfilePage from './pages/ProfilePage';
 import EmployeesPage from './pages/EmployeesPage';
 
 /** "/" sends each person to their own dashboard. */
@@ -54,8 +57,9 @@ export default function App() {
           </Route>
 
           {/* Shared pages: content adapts to the role once built */}
-          <Route path="attendance" element={<PagePlaceholder title="Attendance" />} />
-          <Route path="leaves" element={<PagePlaceholder title="Leave" />} />
+          <Route path="attendance" element={<AttendancePage />} />
+          <Route path="leaves" element={<LeavePage />} />
+          <Route path="profile" element={<ProfilePage />} />
           <Route path="announcements" element={<PagePlaceholder title="Announcements" />} />
           <Route path="training" element={<PagePlaceholder title="Training" />} />
 
