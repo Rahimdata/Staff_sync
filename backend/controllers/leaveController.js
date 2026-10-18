@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Leave = require('../models/Leave');
+const Attendance = require('../models/Attendance');
 const asyncHandler = require('../utils/asyncHandler');
 const { getToday, parseDateKey } = require('../utils/dateUtils');
 const { getPagination, pageMeta } = require('../utils/pagination');
@@ -48,6 +49,16 @@ const applyLeave = asyncHandler(async (req, res) => {
   if (overlap) {
     res.status(409);
     throw new Error('You already have a pending or approved leave overlapping these dates');
+  }
+
+  const worked = await Attendance.findOne({
+    userId: req.user._id,
+    checkInTime: { $ne: null },
+    date: { $gte: start, $lte: end },
+  });
+  if (worked) {
+    res.status(409);
+    throw new Error(`You already have attendance recorded on ${worked.date.toISOString().slice(0, 10)}. Choose dates you have not worked`);
   }
 
   const leave = await Leave.create({
@@ -157,4 +168,89 @@ const updateLeaveStatus = asyncHandler(async (req, res) => {
   res.json({ success: true, leave: updated });
 });
 
-module.exports = { applyLeave, getMyLeaves, getPendingLeaves, updateLeaveStatus };
+// @route   GET /api/leaves/all?status=&userId=&page=&limit=
+// Full request history (any status) for reviewers.
+// @access  HR (everyone) / MANAGER (direct reports only)
+const getAllLeaves = asyncHandler(async (req, res) => {
+  const filter = {};
+  let teamIds = null;
+
+  if (req.user.role === 'MANAGER') {
+    teamIds = await getTeamIds(req.user._id);
+    filter.userId = { $in: teamIds };
+  }
+
+  if (req.query.userId !== undefined) {
+    if (typeof req.query.userId !== 'string' || !mongoose.isValidObjectId(req.query.userId)) {
+      res.status(400);
+      throw new Error('Invalid userId');
+    }
+    if (teamIds && !teamIds.some((id) => id.equals(req.query.userId))) {
+      res.status(403);
+      throw new Error('That employee is not on your team');
+    }
+    filter.userId = req.query.userId;
+  }
+
+  if (req.query.status !== undefined) {
+    if (!LEAVE_STATUSES.includes(req.query.status)) {
+      res.status(400);
+      throw new Error(`status must be one of: ${LEAVE_STATUSES.join(', ')}`);
+    }
+    filter.status = req.query.status;
+  }
+
+  const { page, limit, skip } = getPagination(req.query);
+  const [leaves, total] = await Promise.all([
+    Leave.find(filter)
+      .populate('userId', 'name email department designation')
+      .populate('reviewedBy', 'name')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    Leave.countDocuments(filter),
+  ]);
+
+  res.json({ success: true, count: leaves.length, ...pageMeta(total, page, limit), leaves });
+});
+
+// @route   GET /api/leaves/today
+// Approved leave that covers today, so dashboards can show who is away.
+// @access  HR (everyone) / MANAGER (direct reports only)
+const getLeavesToday = asyncHandler(async (req, res) => {
+  const today = getToday();
+  const filter = { status: 'APPROVED', startDate: { $lte: today }, endDate: { $gte: today } };
+
+  if (req.user.role === 'MANAGER') {
+    filter.userId = { $in: await getTeamIds(req.user._id) };
+  }
+
+  const leaves = await Leave.find(filter).populate('userId', 'name department').limit(200);
+  res.json({ success: true, count: leaves.length, leaves });
+});
+
+// @route   DELETE /api/leaves/:id
+// Withdraw your own request while it is still pending.
+// @access  Private (owner only)
+const cancelLeave = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  if (!mongoose.isValidObjectId(id)) {
+    res.status(400);
+    throw new Error('Invalid leave id');
+  }
+
+  const removed = await Leave.findOneAndDelete({ _id: id, userId: req.user._id, status: 'PENDING' });
+  if (!removed) {
+    const existing = await Leave.findById(id);
+    if (!existing || !existing.userId.equals(req.user._id)) {
+      res.status(404);
+      throw new Error('Leave request not found');
+    }
+    res.status(409);
+    throw new Error('Only pending requests can be cancelled');
+  }
+
+  res.json({ success: true, message: 'Leave request cancelled' });
+});
+
+module.exports = { applyLeave, getMyLeaves, getPendingLeaves, updateLeaveStatus, getAllLeaves, getLeavesToday, cancelLeave };
