@@ -360,3 +360,160 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ───────── Manager / shared additions ───────── */
+.page-head {
+  display: grid;
+  gap: 2px;
+}
+
+.page-head h2 {
+  font-size: 26px;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+}
+
+.page-head p {
+  color: var(--text-muted);
+}
+
+.status-badge--neutral {
+  color: #46506a;
+  background: #e8ebf2;
+}
+
+.status-badge--info {
+  color: #2641c4;
+  background: #e4eaff;
+}
+
+.alert--success {
+  color: var(--approved-fg);
+  background: #effaf3;
+  border-color: #bfe8cf;
+}
+
+.btn--approve {
+  color: #fff;
+  background: #13804a;
+}
+
+.btn--approve:hover:not(:disabled) {
+  background: #0f6b3d;
+}
+
+.btn--reject {
+  color: var(--rejected-fg);
+  background: var(--surface);
+  border-color: #efc2c2;
+}
+
+.btn--reject:hover:not(:disabled) {
+  background: #fff1f1;
+}
+
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.row-error {
+  max-width: 220px;
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: var(--rejected-fg);
+}
+
+.grid-stats--4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.list li {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.list li:first-child {
+  padding-top: 4px;
+}
+
+.list li:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.list strong {
+  display: block;
+  font-weight: 600;
+}
+
+.list__meta {
+  font-size: 12.5px;
+}
+
+.check-list {
+  display: grid;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.check:hover {
+  background: var(--paper);
+}
+
+.check:has(input:checked) {
+  background: var(--accent-50);
+  border-color: #b9c8ff;
+}
+
+.check input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--accent);
+}
+
+.check small {
+  display: block;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.check--toggle {
+  margin-bottom: 4px;
+}
+
+@media (max-width: 1100px) {
+  .grid-stats--4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .grid-stats--4 {
+    grid-template-columns: 1fr;
+  }
+}
