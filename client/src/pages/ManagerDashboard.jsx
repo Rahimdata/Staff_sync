@@ -7,6 +7,7 @@ import Loader from '../components/Loader';
 import StatCard from '../components/StatCard';
 import LeaveQueue from '../components/LeaveQueue';
 import TrainingModal from '../components/TrainingModal';
+import MyDayCard from '../components/MyDayCard';
 
 const TRAINING_BADGE = { PLANNED: 'neutral', ONGOING: 'info', COMPLETED: 'approved' };
 const TRAINING_LABEL = { PLANNED: 'Planned', ONGOING: 'Ongoing', COMPLETED: 'Completed' };
@@ -18,6 +19,7 @@ export default function ManagerDashboard() {
   const [todayRecords, setTodayRecords] = useState([]);
   const [pending, setPending] = useState([]);
   const [trainings, setTrainings] = useState([]);
+  const [onLeave, setOnLeave] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [notice, setNotice] = useState('');
@@ -26,19 +28,21 @@ export default function ManagerDashboard() {
   // Four independent requests: one failing must not blank the page.
   const load = useCallback(async () => {
     const today = todayKey();
-    const [teamRes, attRes, leaveRes, trainRes] = await Promise.allSettled([
+    const [teamRes, attRes, leaveRes, trainRes, awayRes] = await Promise.allSettled([
       api.get('/users/team'),
       api.get('/attendance/all', { params: { from: today, to: today, limit: 100 } }),
       api.get('/leaves/pending', { params: { limit: 50 } }),
       api.get('/training', { params: { limit: 20 } }),
+      api.get('/leaves/today'),
     ]);
 
     if (teamRes.status === 'fulfilled') setTeam(teamRes.value.data.users);
     if (attRes.status === 'fulfilled') setTodayRecords(attRes.value.data.attendance);
     if (leaveRes.status === 'fulfilled') setPending(leaveRes.value.data.leaves);
     if (trainRes.status === 'fulfilled') setTrainings(trainRes.value.data.trainings);
+    if (awayRes.status === 'fulfilled') setOnLeave(awayRes.value.data.leaves);
 
-    const failed = [teamRes, attRes, leaveRes, trainRes].find((r) => r.status === 'rejected');
+    const failed = [teamRes, attRes, leaveRes, trainRes, awayRes].find((r) => r.status === 'rejected');
     setLoadError(failed ? getErrorMessage(failed.reason, 'Some information could not be loaded.') : '');
     setLoading(false);
   }, []);
@@ -67,6 +71,7 @@ export default function ManagerDashboard() {
   const rows = team.map((member) => ({ member, record: recordByUser.get(member._id) }));
   const presentCount = rows.filter((r) => r.record?.checkInTime).length;
   const activeTrainings = trainings.filter((t) => t.status !== 'COMPLETED').length;
+  const onLeaveIds = new Set(onLeave.map((l) => l.userId?._id));
 
   return (
     <div className="page">
@@ -90,6 +95,8 @@ export default function ManagerDashboard() {
           <span>{notice}</span>
         </div>
       )}
+
+      <MyDayCard />
 
       <section className="grid-stats grid-stats--4" aria-label="Summary">
         <StatCard icon={Users} label="Team size" value={loading ? '–' : team.length} hint="Direct reports" />
@@ -130,7 +137,7 @@ export default function ManagerDashboard() {
                   </thead>
                   <tbody>
                     {rows.map(({ member, record }) => {
-                      let badge = <span className="status-badge status-badge--neutral">Not in yet</span>;
+                      let badge = onLeaveIds.has(member._id) ? <span className="status-badge status-badge--pending">On leave</span> : <span className="status-badge status-badge--neutral">Not in yet</span>;
                       if (record?.checkOutTime) badge = <span className="status-badge status-badge--info">Done</span>;
                       else if (record?.checkInTime) badge = <span className="status-badge status-badge--approved">Working</span>;
                       return (
