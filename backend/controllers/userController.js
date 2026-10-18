@@ -225,4 +225,34 @@ const deactivateUser = asyncHandler(async (req, res) => {
   res.json({ success: true, message: 'User deactivated', user: target });
 });
 
-module.exports = { getUsers, getTeam, getUserById, updateUser, deactivateUser };
+// @route   PUT /api/users/:id/password   body: { "newPassword": "..." }
+// HR sets a temporary password for someone who is locked out. Their sessions all end.
+// @access  HR only (use "change password" for your own account)
+const resetPassword = asyncHandler(async (req, res) => {
+  if (!isId(req.params.id)) {
+    res.status(400);
+    throw new Error('Invalid user id');
+  }
+  const { newPassword } = req.body;
+  if (typeof newPassword !== 'string' || newPassword.length < 8 || newPassword.length > 72) {
+    res.status(400);
+    throw new Error('The new password must be between 8 and 72 characters');
+  }
+
+  const target = await User.findById(req.params.id);
+  if (!target) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+  if (target._id.equals(req.user._id)) {
+    res.status(400);
+    throw new Error('To change your own password, use the change password form on your profile');
+  }
+
+  target.password = newPassword;
+  await target.save();
+
+  res.json({ success: true, message: `Password reset for ${target.name}` });
+});
+
+module.exports = { getUsers, getTeam, getUserById, updateUser, deactivateUser, resetPassword };
