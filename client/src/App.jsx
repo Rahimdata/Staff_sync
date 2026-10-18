@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import PagePlaceholder from './components/PagePlaceholder';
 import Login from './pages/Login';
+import EmployeeDashboard from './pages/EmployeeDashboard';
 
 /** "/" sends each person to their own dashboard. */
 function RoleRedirect() {
@@ -46,7 +47,7 @@ export default function App() {
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={['EMPLOYEE']} />}>
-            <Route path="employee" element={<PagePlaceholder title="Employee dashboard" />} />
+            <Route path="employee" element={<EmployeeDashboard />} />
           </Route>
 
           {/* Shared pages: content adapts to the role once built */}
