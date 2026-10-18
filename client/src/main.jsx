@@ -6,6 +6,7 @@ import App from './App';
 import './assets/styles/global.css';
 import './assets/styles/layout.css';
 import './assets/styles/login.css';
+import './assets/styles/dashboard.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
