@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
-import { AlertCircle, Check, ChevronLeft, ChevronRight, Pencil, Search, UserCheck, UserPlus, UserX } from 'lucide-react';
+import { AlertCircle, Check, ChevronLeft, ChevronRight, KeyRound, Pencil, Search, UserCheck, UserPlus, UserX } from 'lucide-react';
 import api, { getErrorMessage } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Loader from '../components/Loader';
 import RoleBadge from '../components/RoleBadge';
 import ConfirmModal from '../components/ConfirmModal';
+import ResetPasswordModal from '../components/ResetPasswordModal';
 import EmployeeFormModal from '../components/EmployeeFormModal';
 
 const PAGE_SIZE = 10;
@@ -27,6 +28,7 @@ export default function EmployeesPage() {
   const [reloadKey, setReloadKey] = useState(0);
   const [formState, setFormState] = useState(null); // { employee: object | null }
   const [confirmUser, setConfirmUser] = useState(null);
+  const [resetUser, setResetUser] = useState(null);
 
   const reload = useCallback(() => setReloadKey((k) => k + 1), []);
 
@@ -205,6 +207,12 @@ export default function EmployeesPage() {
                               <Pencil size={15} />
                               Edit
                             </button>
+                            {!isMe && (
+                              <button type="button" className="btn btn--sm btn--ghost" onClick={() => setResetUser(u)} aria-label={`Reset password for ${u.name}`}>
+                                <KeyRound size={15} />
+                                Password
+                              </button>
+                            )}
                             {active ? (
                               <button type="button" className="btn btn--sm btn--reject" onClick={() => setConfirmUser(u)} disabled={isMe} title={isMe ? 'You can’t deactivate yourself' : undefined} aria-label={`Deactivate ${u.name}`}>
                                 <UserX size={15} />
@@ -257,6 +265,8 @@ export default function EmployeesPage() {
         onConfirm={deactivate}
         onClose={() => setConfirmUser(null)}
       />
+
+      <ResetPasswordModal open={!!resetUser} employee={resetUser} onClose={() => setResetUser(null)} onDone={(name) => setNotice(`Password reset for ${name}. They were signed out everywhere.`)} />
     </div>
   );
 }
