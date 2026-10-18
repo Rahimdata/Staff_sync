@@ -35,10 +35,10 @@ export default function Sidebar({ open, onClose }) {
         </nav>
 
         <div className="sidebar__footer">
-          <div className="glass-note">
+          <NavLink to="/profile" className="glass-note glass-note--link" title="My profile">
             <strong>{user.name}</strong>
             <span>{[user.designation, user.department].filter(Boolean).join(', ') || 'No department set'}</span>
-          </div>
+          </NavLink>
         </div>
       </aside>
     </>
