@@ -29,10 +29,10 @@ const applyLeave = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error('endDate cannot be before startDate');
   }
-  // Sick leave may be filed after the fact; everything else must start today or later
-  if (leaveType !== 'SICK' && start < getToday()) {
+  // Leave must start today or later, for every leave type
+  if (start < getToday()) {
     res.status(400);
-    throw new Error('startDate cannot be in the past');
+    throw new Error('The start date cannot be in the past');
   }
 
   if (typeof reason !== 'string' || !reason.trim() || reason.trim().length > 500) {
@@ -58,7 +58,8 @@ const applyLeave = asyncHandler(async (req, res) => {
   });
   if (worked) {
     res.status(409);
-    throw new Error(`You already have attendance recorded on ${worked.date.toISOString().slice(0, 10)}. Choose dates you have not worked`);
+    const day = worked.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+    throw new Error(`You already checked in on ${day}, so that day can’t be taken as leave. Start your leave from a day you haven’t worked`);
   }
 
   const leave = await Leave.create({
