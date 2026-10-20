@@ -3,11 +3,23 @@ import { AlertCircle, Loader2 } from 'lucide-react';
 import api, { getErrorMessage } from '../services/api';
 import Modal from './Modal';
 
-function TrainingForm({ team, onClose, onCreated }) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [companyWide, setCompanyWide] = useState(false);
-  const [selected, setSelected] = useState([]);
+const STATUS_OPTIONS = [
+  ['PLANNED', 'Planned'],
+  ['ONGOING', 'Ongoing'],
+  ['COMPLETED', 'Completed'],
+];
+
+const idOf = (v) => (v && typeof v === 'object' ? v._id : v);
+
+function TrainingForm({ training, team, onClose, onCreated, onUpdated }) {
+  const editing = !!training;
+  const initialIds = (training?.assignedEmployees ?? []).map(idOf);
+
+  const [title, setTitle] = useState(training?.title ?? '');
+  const [description, setDescription] = useState(training?.description ?? '');
+  const [status, setStatus] = useState(training?.status ?? 'PLANNED');
+  const [companyWide, setCompanyWide] = useState(!!training?.isCompanyWide);
+  const [selected, setSelected] = useState(initialIds);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -17,25 +29,48 @@ function TrainingForm({ team, onClose, onCreated }) {
     event.preventDefault();
     if (submitting) return;
 
-    if (!title.trim()) return setError('Give the program a title.');
-    if (!companyWide && selected.length === 0) return setError('Select at least one person, or open it to the whole company.');
+    if (!title.trim()) {
+      setError('Give the program a title.');
+      return;
+    }
+    if (!companyWide && selected.length === 0) {
+      setError('Select at least one person, or open it to the whole company.');
+      return;
+    }
 
     setSubmitting(true);
     setError('');
     try {
-      const { data } = await api.post('/training', {
-        title: title.trim(),
-        description: description.trim() || undefined,
-        assignedEmployees: selected,
-        isCompanyWide: companyWide,
-      });
-      onCreated(data.training);
+      if (editing) {
+        // Send only what changed.
+        const changes = {};
+        if (title.trim() !== training.title) changes.title = title.trim();
+        if (description.trim() !== (training.description ?? '')) changes.description = description.trim();
+        if (status !== training.status) changes.status = status;
+        if (companyWide !== !!training.isCompanyWide) changes.isCompanyWide = companyWide;
+        const sameAudience = selected.length === initialIds.length && selected.every((id) => initialIds.includes(id));
+        if (!sameAudience) changes.assignedEmployees = selected;
+
+        if (Object.keys(changes).length === 0) {
+          onClose();
+          return;
+        }
+        const { data } = await api.put(`/training/${training._id}`, changes);
+        if (onUpdated) onUpdated(data.training);
+      } else {
+        const { data } = await api.post('/training', {
+          title: title.trim(),
+          description: description.trim() || undefined,
+          assignedEmployees: selected,
+          isCompanyWide: companyWide,
+        });
+        if (onCreated) onCreated(data.training);
+      }
       onClose();
     } catch (err) {
-      setError(getErrorMessage(err, 'Could not create the program. Try again.'));
+      setError(getErrorMessage(err, 'Could not save the program. Try again.'));
       setSubmitting(false);
     }
-    return undefined;
   };
 
   return (
@@ -61,6 +96,21 @@ function TrainingForm({ team, onClose, onCreated }) {
         <textarea id="trainingDescription" className="input input--plain input--area" rows={3} maxLength={2000} placeholder="What will people learn, and when?" value={description} onChange={(e) => setDescription(e.target.value)} disabled={submitting} />
       </div>
 
+      {editing && (
+        <div className="field">
+          <label className="field__label" htmlFor="trainingStatus">
+            Status
+          </label>
+          <select id="trainingStatus" className="input input--plain" value={status} onChange={(e) => setStatus(e.target.value)} disabled={submitting}>
+            {STATUS_OPTIONS.map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <div className="field">
         <span className="field__label">Who is it for?</span>
         <label className="check check--toggle">
@@ -72,9 +122,9 @@ function TrainingForm({ team, onClose, onCreated }) {
         </label>
 
         {team.length === 0 ? (
-          <p className="muted">You have no direct reports yet, so only a company-wide program is possible.</p>
+          <p className="muted">There is nobody to assign yet, so only a company-wide program is possible.</p>
         ) : (
-          <div className="check-list" role="group" aria-label="Team members">
+          <div className="check-list" role="group" aria-label="People">
             {team.map((member) => (
               <label key={member._id} className="check">
                 <input type="checkbox" checked={selected.includes(member._id)} onChange={() => toggle(member._id)} disabled={submitting} />
@@ -96,8 +146,10 @@ function TrainingForm({ team, onClose, onCreated }) {
           {submitting ? (
             <>
               <Loader2 size={17} className="spin" />
-              Creating
+              Saving
             </>
+          ) : editing ? (
+            'Save changes'
           ) : (
             'Create program'
           )}
@@ -107,11 +159,15 @@ function TrainingForm({ team, onClose, onCreated }) {
   );
 }
 
-/** @param {{ open: boolean, onClose: () => void, team: object[], onCreated: (training: object) => void }} props */
-export default function TrainingModal({ open, onClose, team, onCreated }) {
+/**
+ * Create (training = null) or edit a training program.
+ * `team` is who can be assigned: direct reports for managers, everyone for HR.
+ * @param {{ open: boolean, training?: object|null, team: object[], onClose: () => void, onCreated?: (t: object) => void, onUpdated?: (t: object) => void }} props
+ */
+export default function TrainingModal({ open, training = null, team, onClose, onCreated, onUpdated }) {
   return (
-    <Modal open={open} title="New training program" onClose={onClose} width={520}>
-      <TrainingForm team={team} onClose={onClose} onCreated={onCreated} />
+    <Modal open={open} title={training ? 'Edit training program' : 'New training program'} onClose={onClose} width={520}>
+      <TrainingForm training={training} team={team} onClose={onClose} onCreated={onCreated} onUpdated={onUpdated} />
     </Modal>
   );
 }
