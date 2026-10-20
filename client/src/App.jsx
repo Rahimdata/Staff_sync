@@ -3,7 +3,6 @@ import { useAuth } from './context/AuthContext';
 import { roleHome } from './utils/roles';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
-import PagePlaceholder from './components/PagePlaceholder';
 import Login from './pages/Login';
 import EmployeeDashboard from './pages/EmployeeDashboard';
 import ManagerDashboard from './pages/ManagerDashboard';
@@ -11,6 +10,9 @@ import HRDashboard from './pages/HRDashboard';
 import AttendancePage from './pages/AttendancePage';
 import LeavePage from './pages/LeavePage';
 import ProfilePage from './pages/ProfilePage';
+import AnnouncementsPage from './pages/AnnouncementsPage';
+import TrainingPage from './pages/TrainingPage';
+import TeamPage from './pages/TeamPage';
 import EmployeesPage from './pages/EmployeesPage';
 
 /** "/" sends each person to their own dashboard. */
@@ -49,7 +51,7 @@ export default function App() {
 
           <Route element={<ProtectedRoute allowedRoles={['MANAGER']} />}>
             <Route path="manager" element={<ManagerDashboard />} />
-            <Route path="team" element={<PagePlaceholder title="My team" />} />
+            <Route path="team" element={<TeamPage />} />
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={['EMPLOYEE']} />}>
@@ -60,8 +62,8 @@ export default function App() {
           <Route path="attendance" element={<AttendancePage />} />
           <Route path="leaves" element={<LeavePage />} />
           <Route path="profile" element={<ProfilePage />} />
-          <Route path="announcements" element={<PagePlaceholder title="Announcements" />} />
-          <Route path="training" element={<PagePlaceholder title="Training" />} />
+          <Route path="announcements" element={<AnnouncementsPage />} />
+          <Route path="training" element={<TrainingPage />} />
 
           <Route path="*" element={<NotFound />} />
         </Route>
