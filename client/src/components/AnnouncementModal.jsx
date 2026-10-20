@@ -6,9 +6,10 @@ import Modal from './Modal';
 const MAX_TITLE = 150;
 const MAX_CONTENT = 5000;
 
-function AnnouncementForm({ onClose, onCreated }) {
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+function AnnouncementForm({ announcement, onClose, onCreated, onUpdated }) {
+  const editing = !!announcement;
+  const [title, setTitle] = useState(announcement?.title ?? '');
+  const [content, setContent] = useState(announcement?.content ?? '');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -23,11 +24,23 @@ function AnnouncementForm({ onClose, onCreated }) {
     setSubmitting(true);
     setError('');
     try {
-      const { data } = await api.post('/announcements', { title: title.trim(), content: content.trim() });
-      onCreated(data.announcement);
+      if (editing) {
+        const changes = {};
+        if (title.trim() !== announcement.title) changes.title = title.trim();
+        if (content.trim() !== announcement.content) changes.content = content.trim();
+        if (Object.keys(changes).length === 0) {
+          onClose();
+          return;
+        }
+        const { data } = await api.put(`/announcements/${announcement._id}`, changes);
+        if (onUpdated) onUpdated(data.announcement);
+      } else {
+        const { data } = await api.post('/announcements', { title: title.trim(), content: content.trim() });
+        if (onCreated) onCreated(data.announcement);
+      }
       onClose();
     } catch (err) {
-      setError(getErrorMessage(err, 'Could not post the announcement. Try again.'));
+      setError(getErrorMessage(err, 'Could not save the announcement. Try again.'));
       setSubmitting(false);
     }
   };
@@ -68,8 +81,10 @@ function AnnouncementForm({ onClose, onCreated }) {
           {submitting ? (
             <>
               <Loader2 size={17} className="spin" />
-              Posting
+              Saving
             </>
+          ) : editing ? (
+            'Save changes'
           ) : (
             'Post announcement'
           )}
@@ -79,11 +94,14 @@ function AnnouncementForm({ onClose, onCreated }) {
   );
 }
 
-/** @param {{ open: boolean, onClose: () => void, onCreated: (announcement: object) => void }} props */
-export default function AnnouncementModal({ open, onClose, onCreated }) {
+/**
+ * Post (announcement = null) or edit an announcement.
+ * @param {{ open: boolean, announcement?: object|null, onClose: () => void, onCreated?: (a: object) => void, onUpdated?: (a: object) => void }} props
+ */
+export default function AnnouncementModal({ open, announcement = null, onClose, onCreated, onUpdated }) {
   return (
-    <Modal open={open} title="Post an announcement" onClose={onClose} width={520}>
-      <AnnouncementForm onClose={onClose} onCreated={onCreated} />
+    <Modal open={open} title={announcement ? 'Edit announcement' : 'Post an announcement'} onClose={onClose} width={520}>
+      <AnnouncementForm announcement={announcement} onClose={onClose} onCreated={onCreated} onUpdated={onUpdated} />
     </Modal>
   );
 }
