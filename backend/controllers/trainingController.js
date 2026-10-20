@@ -7,62 +7,81 @@ const { getTeamIds } = require('../utils/team');
 
 const TRAINING_STATUSES = ['PLANNED', 'ONGOING', 'COMPLETED'];
 
+const isId = (v) => typeof v === 'string' && mongoose.isValidObjectId(v);
+
+const fail = (res, code, message) => {
+  res.status(code);
+  throw new Error(message);
+};
+
+// ───── field checks shared by create and update ─────
+const checkTitle = (res, title) => {
+  if (typeof title !== 'string' || !title.trim() || title.trim().length > 150) fail(res, 400, 'title is required (max 150 characters)');
+  return title.trim();
+};
+const checkDescription = (res, description) => {
+  if (typeof description !== 'string' || description.length > 2000) fail(res, 400, 'description must be text (max 2000 characters)');
+  return description.trim();
+};
+const checkStatus = (res, status) => {
+  if (!TRAINING_STATUSES.includes(status)) fail(res, 400, `status must be one of: ${TRAINING_STATUSES.join(', ')}`);
+  return status;
+};
+const checkBoolean = (res, value, field) => {
+  if (typeof value !== 'boolean') fail(res, 400, `${field} must be true or false`);
+  return value;
+};
+
+// Validates the assignee list; managers may only assign their own direct reports.
+// Returns de-duplicated ids.
+const resolveAssignees = async (req, res, list) => {
+  if (!Array.isArray(list) || !list.every(isId)) fail(res, 400, 'assignedEmployees must be an array of valid user ids');
+  const ids = [...new Set(list)];
+
+  if (ids.length) {
+    const found = await User.countDocuments({ _id: { $in: ids } });
+    if (found !== ids.length) fail(res, 400, 'One or more assigned employees do not exist');
+
+    if (req.user.role === 'MANAGER') {
+      const teamIds = (await getTeamIds(req.user._id)).map(String);
+      if (!ids.every((id) => teamIds.includes(id))) fail(res, 403, 'You can only assign your own direct reports');
+    }
+  }
+  return ids;
+};
+
+// Loads a program and checks the caller may change it: HR any, a manager only their own.
+const loadManageable = async (req, res) => {
+  if (!isId(req.params.id)) fail(res, 400, 'Invalid training id');
+  const training = await Training.findById(req.params.id);
+  if (!training) fail(res, 404, 'Training program not found');
+  if (req.user.role === 'MANAGER' && !training.managerId.equals(req.user._id)) {
+    fail(res, 403, 'You can only change programs you created');
+  }
+  return training;
+};
+
 // @route   POST /api/training
 // body: { title, description?, assignedEmployees?: [userId], isCompanyWide?: boolean, status? }
 // @access  HR (assign anyone) / MANAGER (assign direct reports only)
 const createTraining = asyncHandler(async (req, res) => {
   const { title, description, assignedEmployees = [], isCompanyWide = false, status } = req.body;
 
-  if (typeof title !== 'string' || !title.trim() || title.trim().length > 150) {
-    res.status(400);
-    throw new Error('title is required (max 150 characters)');
-  }
-  if (description !== undefined && (typeof description !== 'string' || description.length > 2000)) {
-    res.status(400);
-    throw new Error('description must be a string (max 2000 characters)');
-  }
-  if (status !== undefined && !TRAINING_STATUSES.includes(status)) {
-    res.status(400);
-    throw new Error(`status must be one of: ${TRAINING_STATUSES.join(', ')}`);
-  }
-  if (typeof isCompanyWide !== 'boolean') {
-    res.status(400);
-    throw new Error('isCompanyWide must be true or false');
-  }
-  if (!Array.isArray(assignedEmployees) || !assignedEmployees.every((id) => mongoose.isValidObjectId(id))) {
-    res.status(400);
-    throw new Error('assignedEmployees must be an array of valid user ids');
-  }
+  const cleanTitle = checkTitle(res, title);
+  const cleanDescription = description !== undefined ? checkDescription(res, description) : undefined;
+  const cleanStatus = status !== undefined ? checkStatus(res, status) : undefined;
+  checkBoolean(res, isCompanyWide, 'isCompanyWide');
+  const ids = await resolveAssignees(req, res, assignedEmployees);
 
-  const ids = [...new Set(assignedEmployees.map(String))];
-
-  if (!isCompanyWide && ids.length === 0) {
-    res.status(400);
-    throw new Error('Assign at least one employee or mark the program as company-wide');
-  }
-
-  if (ids.length) {
-    const found = await User.countDocuments({ _id: { $in: ids } });
-    if (found !== ids.length) {
-      res.status(400);
-      throw new Error('One or more assigned employees do not exist');
-    }
-    if (req.user.role === 'MANAGER') {
-      const teamIds = (await getTeamIds(req.user._id)).map(String);
-      if (!ids.every((id) => teamIds.includes(id))) {
-        res.status(403);
-        throw new Error('You can only assign your own direct reports');
-      }
-    }
-  }
+  if (!isCompanyWide && ids.length === 0) fail(res, 400, 'Assign at least one employee or mark the program as company-wide');
 
   const training = await Training.create({
-    title: title.trim(),
-    description: description ? description.trim() : undefined,
+    title: cleanTitle,
+    description: cleanDescription || undefined,
     managerId: req.user._id,
     assignedEmployees: ids,
     isCompanyWide,
-    status,
+    status: cleanStatus,
   });
   await training.populate([
     { path: 'managerId', select: 'name designation' },
@@ -70,6 +89,42 @@ const createTraining = asyncHandler(async (req, res) => {
   ]);
 
   res.status(201).json({ success: true, training });
+});
+
+// @route   PUT /api/training/:id
+// body (any of): title, description, status, isCompanyWide, assignedEmployees
+// @access  HR (any program) / MANAGER (programs they created)
+const updateTraining = asyncHandler(async (req, res) => {
+  const training = await loadManageable(req, res);
+  const { title, description, status, isCompanyWide, assignedEmployees } = req.body;
+
+  if (title !== undefined) training.title = checkTitle(res, title);
+  if (description !== undefined) training.description = checkDescription(res, description);
+  if (status !== undefined) training.status = checkStatus(res, status);
+  if (isCompanyWide !== undefined) training.isCompanyWide = checkBoolean(res, isCompanyWide, 'isCompanyWide');
+  if (assignedEmployees !== undefined) training.assignedEmployees = await resolveAssignees(req, res, assignedEmployees);
+
+  // A program must always have an audience
+  if (!training.isCompanyWide && training.assignedEmployees.length === 0) {
+    fail(res, 400, 'A program needs at least one person, or must be company-wide');
+  }
+  if (training.modifiedPaths().length === 0) fail(res, 400, 'No changes to save');
+
+  await training.save();
+  await training.populate([
+    { path: 'managerId', select: 'name designation' },
+    { path: 'assignedEmployees', select: 'name email department' },
+  ]);
+
+  res.json({ success: true, training });
+});
+
+// @route   DELETE /api/training/:id
+// @access  HR (any program) / MANAGER (programs they created)
+const deleteTraining = asyncHandler(async (req, res) => {
+  const training = await loadManageable(req, res);
+  await training.deleteOne();
+  res.json({ success: true, message: 'Training program deleted' });
 });
 
 // @route   GET /api/training?status=&page=&limit=
@@ -86,11 +141,8 @@ const getTraining = asyncHandler(async (req, res) => {
     filter = { $or: [{ assignedEmployees: me }, { isCompanyWide: true }] };
   }
 
-  if (req.query.status) {
-    if (!TRAINING_STATUSES.includes(req.query.status)) {
-      res.status(400);
-      throw new Error(`status must be one of: ${TRAINING_STATUSES.join(', ')}`);
-    }
+  if (req.query.status !== undefined) {
+    checkStatus(res, req.query.status);
     filter.status = req.query.status;
   }
 
@@ -110,4 +162,4 @@ const getTraining = asyncHandler(async (req, res) => {
   res.json({ success: true, count: trainings.length, ...pageMeta(total, page, limit), trainings });
 });
 
-module.exports = { createTraining, getTraining };
+module.exports = { createTraining, getTraining, updateTraining, deleteTraining };
