@@ -776,3 +776,58 @@ a.profile-chip:hover {
     grid-template-columns: 1fr;
   }
 }
+
+/* ───────── Announcements + training pages ───────── */
+.stack {
+  display: grid;
+  gap: 16px;
+}
+
+.post {
+  padding: 20px 22px;
+}
+
+.post__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.post h3 {
+  font-size: 16px;
+  font-weight: 620;
+  letter-spacing: -0.01em;
+}
+
+.post__meta {
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.post__body {
+  margin-top: 12px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.post__actions {
+  display: flex;
+  flex: none;
+  gap: 6px;
+}
+
+.empty-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0 4px;
+  color: var(--text-faint);
+}
+
+@media (max-width: 640px) {
+  .post__head {
+    flex-direction: column;
+  }
+}
