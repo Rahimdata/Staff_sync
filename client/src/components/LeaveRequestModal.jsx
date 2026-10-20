@@ -20,7 +20,7 @@ function LeaveForm({ onClose, onCreated }) {
   const validate = () => {
     if (!startDate || !endDate) return 'Choose a start and an end date.';
     if (endDate < startDate) return 'The end date cannot be before the start date.';
-    if (leaveType !== 'SICK' && startDate < today) return 'The start date cannot be in the past. Only sick leave can be filed afterwards.';
+    if (startDate < today) return 'The start date cannot be in the past.';
     if (!reason.trim()) return 'Add a short reason for your request.';
     return '';
   };
@@ -79,7 +79,7 @@ function LeaveForm({ onClose, onCreated }) {
             type="date"
             className="input input--plain"
             value={startDate}
-            min={leaveType === 'SICK' ? undefined : today}
+            min={today}
             onChange={(e) => {
               setStartDate(e.target.value);
               if (endDate && e.target.value > endDate) setEndDate(e.target.value);
@@ -91,7 +91,7 @@ function LeaveForm({ onClose, onCreated }) {
           <label className="field__label" htmlFor="endDate">
             To
           </label>
-          <input id="endDate" type="date" className="input input--plain" value={endDate} min={startDate || undefined} onChange={(e) => setEndDate(e.target.value)} disabled={submitting} />
+          <input id="endDate" type="date" className="input input--plain" value={endDate} min={startDate || today} onChange={(e) => setEndDate(e.target.value)} disabled={submitting} />
         </div>
       </div>
 
