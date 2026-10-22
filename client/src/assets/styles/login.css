@@ -202,6 +202,113 @@
   background: rgba(79, 227, 160, 0.16);
 }
 
+/* Role cards: "One app, three views" */
+.role-views {
+  display: grid;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.role-views__label {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8fa2cf;
+}
+
+.role-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.role-card {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  box-shadow: 0 18px 40px -22px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  /* "backwards", not "both": a held end-state would block the hover transform below */
+  animation: glass-in 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  transition: transform 0.25s ease, background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.role-card:hover {
+  transform: translateY(-3px);
+  background: rgba(255, 255, 255, 0.11);
+  border-color: rgba(138, 160, 255, 0.45);
+  box-shadow: 0 22px 44px -20px rgba(59, 99, 255, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.role-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin-bottom: 8px;
+  color: #b9c8ff;
+  background: rgba(59, 99, 255, 0.2);
+  border: 1px solid rgba(138, 160, 255, 0.25);
+  border-radius: 10px;
+}
+
+.role-card strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.role-card p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: #a4b2d1;
+}
+
+/* Narrower brand column: stack the cards as rows */
+@media (max-width: 1240px) {
+  .role-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .role-card {
+    grid-template-columns: auto 1fr;
+    column-gap: 12px;
+    align-items: center;
+    padding: 10px 12px;
+  }
+
+  .role-card__icon {
+    grid-row: span 2;
+    width: 32px;
+    height: 32px;
+    margin-bottom: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .role-card {
+    animation: none;
+    transition: none;
+  }
+
+  .role-card:hover {
+    transform: none;
+  }
+}
+
 .chip-row {
   display: flex;
   flex-wrap: wrap;

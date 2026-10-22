@@ -1,6 +1,6 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
-const { register, login, getMe, changePassword } = require('../controllers/authController');
+const { register, signup, login, getMe, changePassword } = require('../controllers/authController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 const User = require('../models/User');
 const asyncHandler = require('../utils/asyncHandler');
@@ -14,6 +14,15 @@ const loginLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Too many login attempts, try again in 15 minutes' },
+});
+
+// Stops bots from flooding HR's approval queue with fake signups
+const signupLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many signup requests, try again later' },
 });
 
 // Slows down guessing the current password with a stolen token
@@ -35,6 +44,7 @@ const bootstrapOrHR = asyncHandler(async (req, res, next) => {
 });
 
 router.post('/register', bootstrapOrHR, register);
+router.post('/signup', signupLimiter, signup);
 router.post('/login', loginLimiter, login);
 router.get('/me', protect, getMe);
 router.put('/change-password', protect, passwordLimiter, changePassword);

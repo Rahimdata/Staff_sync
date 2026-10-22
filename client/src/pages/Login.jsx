@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';                    
 import {
   AlertCircle,
   CalendarCheck,
@@ -11,6 +11,9 @@ import {
   Mail,
   Megaphone,
   ShieldCheck,
+  User,
+  UserCog,
+  Users,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getErrorMessage } from '../services/api';
@@ -36,7 +39,13 @@ const VALUE_PROPS = [
   },
 ];
 
-const FEATURE_BADGES = ['Role-based access', 'Records kept after offboarding', 'Overlap-safe leave'];
+const ROLE_VIEWS = [
+  { icon: UserCog, role: 'HR', text: 'Manage employees and post announcements.' },
+  { icon: Users, role: 'Manager', text: 'See team attendance and approve leave.' },
+  { icon: User, role: 'Employee', text: 'Check in, apply for leave, read updates.' },
+];
+
+const FEATURE_BADGES =['Role-based access', 'Records kept after offboarding', 'Overlap-safe leave'];
 
 export default function Login() {
   const { user, initializing, login } = useAuth();
@@ -107,26 +116,20 @@ export default function Login() {
             ))}
           </ul>
 
-          {/* Decorative preview of real product moments */}
-          <div className="glass-stack" aria-hidden="true">
-            <div className="glass glass--a">
-              <span className="glass__avatar">PE</span>
-              <div className="glass__body">
-                <strong>Priya checked in</strong>
-                <span>09:02 AM</span>
-              </div>
-              <span className="live-dot" />
-            </div>
-            <div className="glass glass--b">
-              <span className="glass__icon">
-                <CalendarCheck size={16} />
-              </span>
-              <div className="glass__body">
-                <strong>Leave approved</strong>
-                <span>Oct 28 to Oct 29, casual</span>
-              </div>
-              <span className="status-badge status-badge--approved">Approved</span>
-            </div>
+          {/* One app, three views: what each role gets after signing in */}
+          <div className="role-views">
+            <p className="role-views__label">One app, three views</p>
+            <ul className="role-grid">
+              {ROLE_VIEWS.map(({ icon: Icon, role, text }, index) => (
+                <li key={role} className="role-card" style={{ animationDelay: `${0.15 + index * 0.12}s` }}>
+                  <span className="role-card__icon">
+                    <Icon size={18} strokeWidth={1.75} />
+                  </span>
+                  <strong>{role}</strong>
+                  <p>{text}</p>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 
@@ -226,7 +229,12 @@ export default function Login() {
             </button>
           </form>
 
-          <p className="login-card__foot">Accounts are created by HR. If you can’t sign in, ask your HR administrator.</p>
+          <p className="login-card__foot">
+            Don't have an account?{' '}
+            <Link to="/register" className="text-link">
+              Register
+            </Link>
+          </p>
         </div>
       </main>
     </div>
