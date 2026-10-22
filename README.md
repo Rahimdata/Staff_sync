@@ -22,7 +22,7 @@ There are three kinds of users, and each one sees a different app after signing 
 |---      |---       |
 | <img width="1898" height="842" alt="image" src="https://github.com/user-attachments/assets/252868be-cef5-4011-bb9d-cd6ce837160b" />|<img width="1887" height="861" alt="image" src="https://github.com/user-attachments/assets/821b752f-4933-4155-81f7-5ce99e6b2f2e" />|
 
-| Manager | Attanendce |
+| Manager | Attendance |
 |---|---|
 |<img width="1887" height="861" alt="image" src="https://github.com/user-attachments/assets/71f66d20-a9f3-4eb0-b835-20b392edf89c" />|<img width="1882" height="857" alt="image" src="https://github.com/user-attachments/assets/3ecf8876-e202-44ee-8c9a-4882db8d572c" />|
 
