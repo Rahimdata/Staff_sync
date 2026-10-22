@@ -1,5 +1,5 @@
-# StaffSync
-Enterprise Human Resource Management SystemStaffSync is a full-stack, enterprise-grade Human Resource Management (HRM) system built using the MERN stack (MongoDB, Express, React, Node.js). Designed with modern SaaS aesthetics, StaffSync streamlines workforce operations, automated attendance tracking, leave workflows, and internal communications across multi-tiered organizational roles.
+# StaffSync - Enterprise Human Resource Management System
+StaffSync is a full-stack, enterprise-grade Human Resource Management (HRM) system built using the MERN stack (MongoDB, Express, React, Node.js). Designed with modern SaaS aesthetics, StaffSync streamlines workforce operations, automated attendance tracking, leave workflows, and internal communications across multi-tiered organizational roles.
 
 ### ▶ Watch the demo video
 https://drive.google.com/file/d/1z6-YPyDwEIq5IGi-5aW4jU42VSSuZ15l/view?usp=sharing
